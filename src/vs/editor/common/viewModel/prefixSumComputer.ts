@@ -78,6 +78,19 @@ export class PrefixSumComputer {
 		}
 	}
 
+	public changeValues(index:number, values:number[]): void {
+		for (let i = 0; i < values.length; i++) {
+			let curr = i + index;
+			if (this.values[curr] === values[i]) {
+				continue;
+			}
+			this.values[curr] = values[i];
+			if (curr - 1 < this.prefixSumValidIndex) {
+				this.prefixSumValidIndex = curr - 1;
+			}
+		}
+	}
+
 	public removeValues(startIndex:number, cnt:number): void {
 		this.values.splice(startIndex, cnt);
 		this.prefixSum.splice(startIndex, cnt);
@@ -91,6 +104,10 @@ export class PrefixSumComputer {
 			return 0;
 		}
 		return this.getAccumulatedValue(this.values.length - 1);
+	}
+
+	public getValue(index:number): number {
+		return this.values[index];
 	}
 
 	public getAccumulatedValue(index:number): number {
