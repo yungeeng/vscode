@@ -12,9 +12,9 @@ import { IDisposable, disposeAll } from 'vs/base/common/lifecycle';
 import { assign } from 'vs/base/common/objects';
 import Event, { Emitter } from 'vs/base/common/event';
 import { append, addClass, removeClass, toggleClass, emmet as $, hide, show, addDisposableListener } from 'vs/base/browser/dom';
-import * as Tree from 'vs/base/parts/tree/browser/tree';
-import * as TreeImpl from 'vs/base/parts/tree/browser/treeImpl';
-import * as TreeDefaults from 'vs/base/parts/tree/browser/treeDefaults';
+// import * as Tree from 'vs/base/parts/tree/browser/tree';
+// import * as TreeImpl from 'vs/base/parts/tree/browser/treeImpl';
+// import * as TreeDefaults from 'vs/base/parts/tree/browser/treeDefaults';
 import * as HighlightedLabel from 'vs/base/browser/ui/highlightedlabel/highlightedLabel';
 import { SuggestModel, ICancelEvent, ISuggestEvent, ITriggerEvent } from './suggestModel';
 import * as Mouse from 'vs/base/browser/mouseEvent';
@@ -32,6 +32,9 @@ import { isFalsyOrEmpty } from 'vs/base/common/arrays';
 import { onUnexpectedError, isPromiseCanceledError, illegalArgument } from 'vs/base/common/errors';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { ScrollableElement } from 'vs/base/browser/ui/scrollbar/scrollableElementImpl';
+import {ListViewModel, IListItem, ListWidget} from 'vs/editor/browser/list/list';
+import {expand as expandOcticons} from 'vs/base/browser/ui/octiconLabel/octiconLabel';
+import {escape} from 'vs/base/common/strings';
 
 function completionGroupCompare(one: CompletionGroup, other: CompletionGroup): number {
 	return one.index - other.index;
@@ -102,7 +105,7 @@ class CompletionGroup {
 	size: number;
 	filter: ISuggestionFilter;
 
-	constructor(public model: CompletionModel, public index: number, raw: ISuggestResult2[]) {
+	constructor(public model: CompletionModel2, public index: number, raw: ISuggestResult2[]) {
 		this.incomplete = false;
 		this.size = 0;
 
@@ -156,19 +159,125 @@ class CompletionGroup {
 	}
 }
 
-class CompletionModel {
+// data.documentationDetails.title = nls.localize('readMore', "Read More...{0}", this.triggerKeybindingLabel);
+
+class ViewCompletionItem implements IListItem {
+
+	constructor(private actual:CompletionItem) {
+
+	}
+
+	getHeight(): number {
+		return 19;
+	}
+
+	render(out:string[]): void {
+
+		// const data = <ISuggestionTemplateData>templateData;
+		// const suggestion = (<CompletionItem>element).suggestion;
+		const suggestion = this.actual.suggestion;
+
+		let ariaLabel:string;
+		let iconClassName: string;
+		let colorspanExtraStyle: string;
+		if (suggestion.type && suggestion.type.charAt(0) === '#') {
+			ariaLabel = 'color';
+			iconClassName = 'icon customcolor';
+			colorspanExtraStyle = ` style="background-color:${suggestion.type.substring(1)}" `;
+		} else {
+			ariaLabel = suggestion.type;
+			iconClassName = 'icon ' + suggestion.type;
+			colorspanExtraStyle = '';
+		}
+
+		// data.highlightedLabel.set(suggestion.label, (<CompletionItem>element).highlights);
+		// data.typeLabel.textContent = suggestion.typeLabel || '';
+		// data.documentation.textContent = suggestion.documentationLabel || '';
+
+		// if (suggestion.documentationLabel) {
+		// 	show(data.documentationDetails);
+
+		// 	data.documentationDetails.onclick = e => {
+		// 		e.stopPropagation();
+		// 		e.preventDefault();
+		// 		this.widget.toggleDetails();
+		// 	};
+		// } else {
+		// 	hide(data.documentationDetails);
+		// 	data.documentationDetails.onclick = null;
+		// }
+
+// let h = highlight(suggestion.label, this.actual.highlights);
+		out.push(
+`
+	<div class="content" aria-label="${ariaLabel}">
+	<div class="${iconClassName}"><span class="colorspan"${colorspanExtraStyle}></span></div>
+	<div class="text">
+		<div class="main">
+			${highlight(suggestion.label, this.actual.highlights)}
+			<span class="type-label">${escape(suggestion.typeLabel || '')}</span>
+		</div>
+		<div class="docs">
+			<span class="docs-text">${escape(suggestion.documentationLabel || '')}</span>
+			<span class="docs-details octicon.octicon-info"></span>
+		</div>
+	</div>
+	</div>
+`
+		);
+	}
+
+}
+
+function highlight(text:string, highlights:IMatch[]): string {
+	let htmlContent: string[] = [`<div class="monaco-highlighted-label">`],
+		highlight: IMatch,
+		pos = 0;
+
+	for (let i = 0; i < highlights.length; i++) {
+		highlight = highlights[i];
+		if (highlight.end === highlight.start) {
+			continue;
+		}
+		if (pos < highlight.start) {
+			htmlContent.push('<span>')
+			htmlContent.push(expandOcticons(escape(text.substring(pos, highlight.start))));
+			htmlContent.push('</span>')
+			pos = highlight.end;
+		}
+		htmlContent.push('<span class="highlight">')
+		htmlContent.push(expandOcticons(escape(text.substring(highlight.start, highlight.end))));
+		htmlContent.push('</span>')
+		pos = highlight.end;
+	}
+
+	if (pos < text.length) {
+		htmlContent.push('<span>')
+		htmlContent.push(expandOcticons(escape(text.substring(pos))));
+		htmlContent.push('</span>')
+	}
+
+	htmlContent.push('</div>');
+
+	return htmlContent.join('');
+}
+
+class CompletionModel2 {
 
 	incomplete: boolean;
 	size: number;
-	private groups: CompletionGroup[];
-	private cache: CompletionItem[];
-	private cacheCurrentWord: string;
 
-	constructor(public raw: ISuggestResult2[][], public currentWord: string) {
+	listViewModel: ListViewModel;
+
+	constructor() {
+		this.listViewModel = new ListViewModel([]);
+	}
+
+	public refresh(raw: ISuggestResult2[][], currentWord: string): void {
 		this.incomplete = false;
 		this.size = 0;
 
-		this.groups = raw
+		let groups = raw
 			.filter(s => !!s)
 			.map((suggestResults, index) => {
 				const group = new CompletionGroup(this, index, suggestResults);
@@ -179,73 +288,105 @@ class CompletionModel {
 				return group;
 			})
 			.sort(completionGroupCompare);
-	}
 
-	get items(): CompletionItem[] {
-		if (this.cacheCurrentWord === this.currentWord) {
-			return this.cache;
-		}
+		const result = groups.reduce((r, groups) => r.concat(groups.getItems(currentWord)), <CompletionItem[]>[]);
+		const result2 = result.map(r => new ViewCompletionItem(r));
+		// console.log('ADDING ' + result2.length);
+		this.listViewModel.splice(0, this.listViewModel.getCount(), result2);
 
-		const result = this.groups.reduce((r, groups) => r.concat(groups.getItems(this.currentWord)), []);
-
-		// let's only cache stuff that actually has results
-		if (result.length > 0) {
-			this.cache = result;
-			this.cacheCurrentWord = this.currentWord;
-		}
-
-		return result;
 	}
 }
 
-function isRoot(element: any): boolean {
-	return element instanceof CompletionModel;
-}
+// class CompletionModel {
 
-class DataSource implements Tree.IDataSource {
+// 	incomplete: boolean;
+// 	size: number;
+// 	private groups: CompletionGroup[];
+// 	private cache: CompletionItem[];
+// 	private cacheCurrentWord: string;
 
-	public getId(tree: Tree.ITree, element: any): string {
-		if (!element) {
-			return 'empty';
-		} else if (isRoot(element)) {
-			return 'root';
-		} else if (element instanceof CompletionItem) {
-			return (<CompletionItem>element).id.toString();
-		}
+// 	constructor(public raw: ISuggestResult2[][], public currentWord: string) {
+// 		this.incomplete = false;
+// 		this.size = 0;
 
-		throw illegalArgument('element');
-	}
+// 		this.groups = raw
+// 			.filter(s => !!s)
+// 			.map((suggestResults, index) => {
+// 				const group = new CompletionGroup(this, index, suggestResults);
 
-	public getParent(tree: Tree.ITree, element: any): TPromise<any> {
-		if (isRoot(element)) {
-			return TPromise.as(null);
-		}
+// 				this.incomplete = group.incomplete || this.incomplete;
+// 				this.size += group.size;
 
-		return TPromise.as((<CompletionItem>element).group.model);
-	}
+// 				return group;
+// 			})
+// 			.sort(completionGroupCompare);
+// 	}
 
-	public getChildren(tree: Tree.ITree, element: any): TPromise<any[]> {
-		if (isRoot(element)) {
-			return TPromise.as((<CompletionModel>element).items);
-		}
+// 	get items(): CompletionItem[] {
+// 		if (this.cacheCurrentWord === this.currentWord) {
+// 			return this.cache;
+// 		}
 
-		return TPromise.as([]);
-	}
+// 		const result = this.groups.reduce((r, groups) => r.concat(groups.getItems(this.currentWord)), []);
 
-	public hasChildren(tree: Tree.ITree, element: any): boolean {
-		return isRoot(element);
-	}
-}
+// 		// let's only cache stuff that actually has results
+// 		if (result.length > 0) {
+// 			this.cache = result;
+// 			this.cacheCurrentWord = this.currentWord;
+// 		}
 
-class Controller extends TreeDefaults.DefaultController {
+// 		return result;
+// 	}
+// }
 
-	/* protected */ public onLeftClick(tree: Tree.ITree, element: any, event: Mouse.StandardMouseEvent): boolean {
-		event.preventDefault();
-		event.stopPropagation();
-		tree.setSelection([element], { origin: 'mouse' });
-		return true;
-	}
-}
+// function isRoot(element: any): boolean {
+// 	return element instanceof CompletionModel;
+// }
+
+// class DataSource implements Tree.IDataSource {
+
+// 	public getId(tree: Tree.ITree, element: any): string {
+// 		if (!element) {
+// 			return 'empty';
+// 		} else if (isRoot(element)) {
+// 			return 'root';
+// 		} else if (element instanceof CompletionItem) {
+// 			return (<CompletionItem>element).id.toString();
+// 		}
+
+// 		throw illegalArgument('element');
+// 	}
+
+// 	public getParent(tree: Tree.ITree, element: any): TPromise<any> {
+// 		if (isRoot(element)) {
+// 			return TPromise.as(null);
+// 		}
+
+// 		return TPromise.as((<CompletionItem>element).group.model);
+// 	}
+
+// 	public getChildren(tree: Tree.ITree, element: any): TPromise<any[]> {
+// 		if (isRoot(element)) {
+// 			return TPromise.as((<CompletionModel>element).items);
+// 		}
+
+// 		return TPromise.as([]);
+// 	}
+
+// 	public hasChildren(tree: Tree.ITree, element: any): boolean {
+// 		return isRoot(element);
+// 	}
+// }
+
+// class Controller extends TreeDefaults.DefaultController {
+
+// 	/* protected */ public onLeftClick(tree: Tree.ITree, element: any, event: Mouse.StandardMouseEvent): boolean {
+// 		event.preventDefault();
+// 		event.stopPropagation();
+// 		tree.setSelection([element], { origin: 'mouse' });
+// 		return true;
+// 	}
+// }
 
 interface IMessageTemplateData {
 	element: HTMLElement;
@@ -261,104 +402,104 @@ interface ISuggestionTemplateData {
 	documentation: HTMLElement;
 }
 
-class Renderer implements Tree.IRenderer {
+// class Renderer implements Tree.IRenderer {
 
-	private triggerKeybindingLabel: string;
+// 	private triggerKeybindingLabel: string;
 
-	constructor(
-		private widget: SuggestWidget,
-		@IKeybindingService keybindingService: IKeybindingService
-	) {
-		const keybindings = keybindingService.lookupKeybindings('editor.action.triggerSuggest');
-		this.triggerKeybindingLabel = keybindings.length === 0 ? '' : ` (${keybindingService.getLabelFor(keybindings[0])})`;
-	}
+// 	constructor(
+// 		private widget: SuggestWidget,
+// 		@IKeybindingService keybindingService: IKeybindingService
+// 	) {
+// 		const keybindings = keybindingService.lookupKeybindings('editor.action.triggerSuggest');
+// 		this.triggerKeybindingLabel = keybindings.length === 0 ? '' : ` (${keybindingService.getLabelFor(keybindings[0])})`;
+// 	}
 
-	public getHeight(tree: Tree.ITree, element: any): number {
-		if (element instanceof CompletionItem) {
-			if ((<CompletionItem>element).suggestion.documentationLabel && tree.isFocused(element)) {
-				return 35;
-			}
-		}
+// 	public getHeight(tree: Tree.ITree, element: any): number {
+// 		if (element instanceof CompletionItem) {
+// 			if ((<CompletionItem>element).suggestion.documentationLabel && tree.isFocused(element)) {
+// 				return 35;
+// 			}
+// 		}
 
-		return 19;
-	}
+// 		return 19;
+// 	}
 
-	public getTemplateId(tree: Tree.ITree, element: any): string {
-		return 'suggestion';
-	}
+// 	public getTemplateId(tree: Tree.ITree, element: any): string {
+// 		return 'suggestion';
+// 	}
 
-	public renderTemplate(tree: Tree.ITree, templateId: string, container: HTMLElement): any {
-		if (templateId === 'message') {
-			const span = $('span');
-			span.style.opacity = '0.7';
-			container.appendChild(span);
-			return <IMessageTemplateData>{ element: span };
-		}
+// 	public renderTemplate(tree: Tree.ITree, templateId: string, container: HTMLElement): any {
+// 		if (templateId === 'message') {
+// 			const span = $('span');
+// 			span.style.opacity = '0.7';
+// 			container.appendChild(span);
+// 			return <IMessageTemplateData>{ element: span };
+// 		}
 
-		const data = <ISuggestionTemplateData>Object.create(null);
-		data.root = container;
+// 		const data = <ISuggestionTemplateData>Object.create(null);
+// 		data.root = container;
 
-		data.icon = append(container, $('.icon'));
-		data.colorspan = append(data.icon, $('span.colorspan'));
+// 		data.icon = append(container, $('.icon'));
+// 		data.colorspan = append(data.icon, $('span.colorspan'));
 
-		const text = append(container, $('.text'));
-		const main = append(text, $('.main'));
-		data.highlightedLabel = new HighlightedLabel.HighlightedLabel(main);
-		data.typeLabel = append(main, $('span.type-label'));
-		const docs = append(text, $('.docs'));
-		data.documentation = append(docs, $('span.docs-text'));
-		data.documentationDetails = append(docs, $('span.docs-details.octicon.octicon-info'));
-		data.documentationDetails.title = nls.localize('readMore', "Read More...{0}", this.triggerKeybindingLabel);
+// 		const text = append(container, $('.text'));
+// 		const main = append(text, $('.main'));
+// 		data.highlightedLabel = new HighlightedLabel.HighlightedLabel(main);
+// 		data.typeLabel = append(main, $('span.type-label'));
+// 		const docs = append(text, $('.docs'));
+// 		data.documentation = append(docs, $('span.docs-text'));
+// 		data.documentationDetails = append(docs, $('span.docs-details.octicon.octicon-info'));
+// 		data.documentationDetails.title = nls.localize('readMore', "Read More...{0}", this.triggerKeybindingLabel);
 
-		return data;
-	}
+// 		return data;
+// 	}
 
-	public renderElement(tree: Tree.ITree, element: any, templateId: string, templateData: any): void {
-		if (templateId === 'message') {
-			(<IMessageTemplateData>templateData).element.textContent = element.message;
-			return;
-		}
+// 	public renderElement(tree: Tree.ITree, element: any, templateId: string, templateData: any): void {
+// 		if (templateId === 'message') {
+// 			(<IMessageTemplateData>templateData).element.textContent = element.message;
+// 			return;
+// 		}
 
-		const data = <ISuggestionTemplateData>templateData;
-		const suggestion = (<CompletionItem>element).suggestion;
+// 		const data = <ISuggestionTemplateData>templateData;
+// 		const suggestion = (<CompletionItem>element).suggestion;
 
-		if (suggestion.type && suggestion.type.charAt(0) === '#') {
-			data.root.setAttribute('aria-label', 'color');
-			data.icon.className = 'icon customcolor';
-			data.colorspan.style.backgroundColor = suggestion.type.substring(1);
-		} else {
-			data.root.setAttribute('aria-label', suggestion.type);
-			data.icon.className = 'icon ' + suggestion.type;
-			data.colorspan.style.backgroundColor = '';
-		}
+// 		if (suggestion.type && suggestion.type.charAt(0) === '#') {
+// 			data.root.setAttribute('aria-label', 'color');
+// 			data.icon.className = 'icon customcolor';
+// 			data.colorspan.style.backgroundColor = suggestion.type.substring(1);
+// 		} else {
+// 			data.root.setAttribute('aria-label', suggestion.type);
+// 			data.icon.className = 'icon ' + suggestion.type;
+// 			data.colorspan.style.backgroundColor = '';
+// 		}
 
-		data.highlightedLabel.set(suggestion.label, (<CompletionItem>element).highlights);
-		data.typeLabel.textContent = suggestion.typeLabel || '';
-		data.documentation.textContent = suggestion.documentationLabel || '';
+// 		data.highlightedLabel.set(suggestion.label, (<CompletionItem>element).highlights);
+// 		data.typeLabel.textContent = suggestion.typeLabel || '';
+// 		data.documentation.textContent = suggestion.documentationLabel || '';
 
-		if (suggestion.documentationLabel) {
-			show(data.documentationDetails);
+// 		if (suggestion.documentationLabel) {
+// 			show(data.documentationDetails);
 
-			data.documentationDetails.onclick = e => {
-				e.stopPropagation();
-				e.preventDefault();
-				this.widget.toggleDetails();
-			};
-		} else {
-			hide(data.documentationDetails);
-			data.documentationDetails.onclick = null;
-		}
-	}
+// 			data.documentationDetails.onclick = e => {
+// 				e.stopPropagation();
+// 				e.preventDefault();
+// 				this.widget.toggleDetails();
+// 			};
+// 		} else {
+// 			hide(data.documentationDetails);
+// 			data.documentationDetails.onclick = null;
+// 		}
+// 	}
 
-	public disposeTemplate(tree: Tree.ITree, templateId: string, templateData: any): void {
-		if (templateId === 'message') {
-			return;
-		}
+// 	public disposeTemplate(tree: Tree.ITree, templateId: string, templateData: any): void {
+// 		if (templateId === 'message') {
+// 			return;
+// 		}
 
-		const data = <ISuggestionTemplateData>templateData;
-		data.highlightedLabel.dispose();
-	}
-}
+// 		const data = <ISuggestionTemplateData>templateData;
+// 		data.highlightedLabel.dispose();
+// 	}
+// }
 
 function computeScore(suggestion: string, currentWord: string, currentWordLowerCase: string): number {
 	const suggestionLowerCase = suggestion.toLowerCase();
@@ -491,8 +632,10 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 	private messageElement: HTMLElement;
 	private treeElement: HTMLElement;
 	private details: SuggestionDetails;
-	private tree: Tree.ITree;
-	private renderer: Renderer;
+	private list: ListWidget;
+	private _completionModel: CompletionModel2;
+	// private tree: Tree.ITree;
+	// private renderer: Renderer;
 
 	private toDispose: IDisposable[];
 
@@ -525,13 +668,13 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 		this.messageElement = append(this.element, $('.message'));
 		this.treeElement = append(this.element, $('.tree'));
 		this.details = new SuggestionDetails(this.element, this);
-		this.renderer = instantiationService.createInstance(Renderer, this);
+		// this.renderer = instantiationService.createInstance(Renderer, this);
 
-		const configuration = {
-			renderer: this.renderer,
-			dataSource: new DataSource(),
-			controller: new Controller()
-		};
+		// const configuration = {
+		// 	renderer: this.renderer,
+		// 	dataSource: new DataSource(),
+		// 	controller: new Controller()
+		// };
 
 		const options = {
 			twistiePixels: 0,
@@ -541,16 +684,20 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 			ariaLabel: nls.localize('treeAriaLabel', "Suggestions")
 		};
 
-		this.tree = new TreeImpl.Tree(this.treeElement, configuration, options);
+		this.list = new ListWidget(this.treeElement);
+		this._completionModel = new CompletionModel2();
+
+
+		// this.tree = new TreeImpl.Tree(this.treeElement, configuration, options);
 
 		this.toDispose = [
 			editor.addListener2(EditorCommon.EventType.ModelChanged, () => this.onModelModeChanged()),
 			editor.addListener2(EditorCommon.EventType.ModelModeChanged, () => this.onModelModeChanged()),
 			editor.addListener2(EditorCommon.EventType.ModelModeSupportChanged, (e: EditorCommon.IModeSupportChangedEvent) => e.suggestSupport && this.onModelModeChanged()),
 			SuggestRegistry.onDidChange(() => this.onModelModeChanged()),
-			editor.addListener2(EditorCommon.EventType.EditorTextBlur, () => this.onEditorBlur()),
-			this.tree.addListener2('selection', e => this.onTreeSelection(e)),
-			this.tree.addListener2('focus', e => this.onTreeFocus(e)),
+			// editor.addListener2(EditorCommon.EventType.EditorTextBlur, () => this.onEditorBlur()),
+			// this.tree.addListener2('selection', e => this.onTreeSelection(e)),
+			// this.tree.addListener2('focus', e => this.onTreeFocus(e)),
 			this.editor.addListener2(EditorCommon.EventType.CursorSelectionChanged, () => this.onCursorSelectionChanged()),
 			this.model.onDidTrigger(e => this.onDidTrigger(e)),
 			this.model.onDidSuggest(e => this.onDidSuggest(e)),
@@ -578,64 +725,64 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 		});
 	}
 
-	private onTreeSelection(e: Tree.ISelectionEvent): void {
-		if (!e.selection || e.selection.length === 0) {
-			return;
-		}
+	// private onTreeSelection(e: Tree.ISelectionEvent): void {
+	// 	if (!e.selection || e.selection.length === 0) {
+	// 		return;
+	// 	}
 
-		const element = e.selection[0];
+	// 	const element = e.selection[0];
 
-		if (!element.hasOwnProperty('suggestions')) {
-			const item: CompletionItem = element;
-			const navigator = this.tree.getNavigator();
+	// 	if (!element.hasOwnProperty('suggestions')) {
+	// 		const item: CompletionItem = element;
+	// 		const navigator = this.tree.getNavigator();
 
-			this.telemetryData.selectedIndex = 0;
-			this.telemetryData.wasCancelled = false;
+	// 		this.telemetryData.selectedIndex = 0;
+	// 		this.telemetryData.wasCancelled = false;
 
-			while (navigator.next() !== item) {
-				this.telemetryData.selectedIndex++;
-			}
+	// 		while (navigator.next() !== item) {
+	// 			this.telemetryData.selectedIndex++;
+	// 		}
 
-			this.submitTelemetryData();
+	// 		this.submitTelemetryData();
 
-			const container = item.container;
-			const overwriteBefore = (typeof item.suggestion.overwriteBefore === 'undefined') ? container.currentWord.length : item.suggestion.overwriteBefore;
-			const overwriteAfter = (typeof item.suggestion.overwriteAfter === 'undefined') ? 0 : Math.max(0, item.suggestion.overwriteAfter);
-			this.model.accept(item.suggestion, overwriteBefore, overwriteAfter);
+	// 		const container = item.container;
+	// 		const overwriteBefore = (typeof item.suggestion.overwriteBefore === 'undefined') ? container.currentWord.length : item.suggestion.overwriteBefore;
+	// 		const overwriteAfter = (typeof item.suggestion.overwriteAfter === 'undefined') ? 0 : Math.max(0, item.suggestion.overwriteAfter);
+	// 		this.model.accept(item.suggestion, overwriteBefore, overwriteAfter);
 
-			this.editor.focus();
-		}
-	}
+	// 		this.editor.focus();
+	// 	}
+	// }
 
-	private onTreeFocus(e: Tree.IFocusEvent): void {
-		const focus = e.focus;
-		const payload = e.payload;
+	// private onTreeFocus(e: Tree.IFocusEvent): void {
+	// 	const focus = e.focus;
+	// 	const payload = e.payload;
 
-		if (focus instanceof CompletionItem) {
-			this.resolveDetails(<CompletionItem>focus);
-			this.suggestionSupportsAutoAccept.set(!(<CompletionItem>focus).suggestion.noAutoAccept);
-		}
+	// 	if (focus instanceof CompletionItem) {
+	// 		this.resolveDetails(<CompletionItem>focus);
+	// 		this.suggestionSupportsAutoAccept.set(!(<CompletionItem>focus).suggestion.noAutoAccept);
+	// 	}
 
-		const elementsToRefresh: any[] = [];
+	// 	const elementsToRefresh: any[] = [];
 
-		if (this.oldFocus) {
-			elementsToRefresh.push(this.oldFocus);
-		}
+	// 	if (this.oldFocus) {
+	// 		elementsToRefresh.push(this.oldFocus);
+	// 	}
 
-		if (focus) {
-			elementsToRefresh.push(focus);
-		}
+	// 	if (focus) {
+	// 		elementsToRefresh.push(focus);
+	// 	}
 
-		this.oldFocus = focus;
+	// 	this.oldFocus = focus;
 
-		this.tree.refreshAll(elementsToRefresh).done(() => {
-			this.updateWidgetHeight();
+	// 	this.tree.refreshAll(elementsToRefresh).done(() => {
+	// 		this.updateWidgetHeight();
 
-			if (focus) {
-				return this.tree.reveal(focus, (payload && payload.firstSuggestion) ? 0 : null);
-			}
-		}, onUnexpectedError);
-	}
+	// 		if (focus) {
+	// 			return this.tree.reveal(focus, (payload && payload.firstSuggestion) ? 0 : null);
+	// 		}
+	// 	}, onUnexpectedError);
+	// }
 
 	private onModelModeChanged(): void {
 		const model = this.editor.getModel();
@@ -654,7 +801,7 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 				hide(this.messageElement, this.details.element);
 				show(this.treeElement);
 				this.hide();
-				if (stateChanged) this.tree.setInput(null);
+				if (stateChanged) this.list.setModel(null);
 				break;
 			case State.Loading:
 				this.messageElement.innerText = SuggestWidget.LOADING_MESSAGE;
@@ -713,96 +860,108 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 	}
 
 	private onDidSuggest(e: ISuggestEvent): void {
+		// console.log('TODO!!!');
 		clearTimeout(this.loadingTimeout);
 
-		let model: CompletionModel = this.tree.getInput();
-		let promise = TPromise.as(null);
-		let visibleCount: number;
-
-		if (model && model.raw === e.suggestions) {
-			const oldCurrentWord = model.currentWord;
-			model.currentWord = e.currentWord;
-			visibleCount = model.items.length;
-
-			if (!e.auto && visibleCount === 0) {
-				model.currentWord = oldCurrentWord;
-
-				if (model.items.length > 0) {
-					this.setState(State.Frozen);
-				} else {
-					this.setState(State.Empty);
-				}
-
-				return;
-			} else {
-				promise = this.tree.refresh();
+		this._completionModel.refresh(e.suggestions, e.currentWord);
+		if (this._completionModel.listViewModel.getCount() > 0) {
+			if (!this.list.getModel()) {
+				this.list.setModel(this._completionModel.listViewModel);
 			}
-		} else {
-			model = new CompletionModel(e.suggestions, e.currentWord);
-			visibleCount = model.items.length;
-			promise = this.tree.setInput(model);
-		}
-
-		if (visibleCount === 0) {
-			if (e.auto) {
-				this.setState(State.Hidden);
-			} else {
-				if (this.shouldShowEmptySuggestionList) {
-					this.setState(State.Empty);
-				} else {
-					this.setState(State.Hidden);
-				}
-			}
-
-			if (this.telemetryTimer) {
-				this.telemetryTimer.data = { reason: 'empty' };
-				this.telemetryTimer.stop();
-				this.telemetryTimer = null;
-			}
-
-			return;
-		}
-
-		promise.done(() => {
-			const navigator = this.tree.getNavigator();
-			const currentWord = e.currentWord;
-			const currentWordLowerCase = currentWord.toLowerCase();
-			const suggestions = model.items;
-
-			let index = 0;
-			let bestSuggestionIndex = -1;
-			let bestSuggestion = suggestions[0];
-			let bestScore = -1;
-			let item: CompletionItem;
-
-			while (item = navigator.next()) {
-				const score = computeScore(item.suggestion.label, currentWord, currentWordLowerCase);
-
-				if (score > bestScore) {
-					bestScore = score;
-					bestSuggestion = item;
-					bestSuggestionIndex = index;
-				}
-			}
-
-			this.tree.setFocus(bestSuggestion, { firstSuggestion: true });
-
-			this.telemetryData = this.telemetryData || {};
-			this.telemetryData.suggestionCount = suggestions.length;
-			this.telemetryData.suggestedIndex = bestSuggestionIndex;
-			this.telemetryData.hintLength = currentWord.length;
-
 			this.setState(State.Open);
+		} else {
+			this.setState(State.Empty);
+		}
 
-			if (this.telemetryTimer) {
-				this.telemetryTimer.data = { reason: 'results' };
-				this.telemetryTimer.stop();
-				this.telemetryTimer = null;
-			}
-		}, onUnexpectedError);
+		// let model: CompletionModel = this.tree.getInput();
+		// let promise = TPromise.as(null);
+		// let visibleCount: number;
+
+		// if (model && model.raw === e.suggestions) {
+		// 	const oldCurrentWord = model.currentWord;
+		// 	model.currentWord = e.currentWord;
+		// 	visibleCount = model.items.length;
+
+		// 	if (!e.auto && visibleCount === 0) {
+		// 		model.currentWord = oldCurrentWord;
+
+		// 		if (model.items.length > 0) {
+		// 			this.setState(State.Frozen);
+		// 		} else {
+		// 			this.setState(State.Empty);
+		// 		}
+
+		// 		return;
+		// 	} else {
+		// 		promise = this.tree.refresh();
+		// 	}
+		// } else {
+		// 	model = new CompletionModel(e.suggestions, e.currentWord);
+		// 	visibleCount = model.items.length;
+		// 	promise = this.tree.setInput(model);
+		// }
+
+		// if (visibleCount === 0) {
+		// 	if (e.auto) {
+		// 		this.setState(State.Hidden);
+		// 	} else {
+		// 		if (this.shouldShowEmptySuggestionList) {
+		// 			this.setState(State.Empty);
+		// 		} else {
+		// 			this.setState(State.Hidden);
+		// 		}
+		// 	}
+
+		// 	if (this.telemetryTimer) {
+		// 		this.telemetryTimer.data = { reason: 'empty' };
+		// 		this.telemetryTimer.stop();
+		// 		this.telemetryTimer = null;
+		// 	}
+
+		// 	return;
+		// }
+
+		// promise.done(() => {
+		// 	const navigator = this.tree.getNavigator();
+		// 	const currentWord = e.currentWord;
+		// 	const currentWordLowerCase = currentWord.toLowerCase();
+		// 	const suggestions = model.items;
+
+		// 	let index = 0;
+		// 	let bestSuggestionIndex = -1;
+		// 	let bestSuggestion = suggestions[0];
+		// 	let bestScore = -1;
+		// 	let item: CompletionItem;
+
+		// 	while (item = navigator.next()) {
+		// 		const score = computeScore(item.suggestion.label, currentWord, currentWordLowerCase);
+
+		// 		if (score > bestScore) {
+		// 			bestScore = score;
+		// 			bestSuggestion = item;
+		// 			bestSuggestionIndex = index;
+		// 		}
+		// 	}
+
+		// 	this.tree.setFocus(bestSuggestion, { firstSuggestion: true });
+
+		// 	this.telemetryData = this.telemetryData || {};
+		// 	this.telemetryData.suggestionCount = suggestions.length;
+		// 	this.telemetryData.suggestedIndex = bestSuggestionIndex;
+		// 	this.telemetryData.hintLength = currentWord.length;
+
+		// 	this.setState(State.Open);
+
+		// 	if (this.telemetryTimer) {
+		// 		this.telemetryTimer.data = { reason: 'results' };
+		// 		this.telemetryTimer.stop();
+		// 		this.telemetryTimer = null;
+		// 	}
+		// }, onUnexpectedError);
 	}
 
 	private onDidCancel(e: ICancelEvent) {
+		// return;
 		clearTimeout(this.loadingTimeout);
 
 		if (!e.retrigger) {
@@ -822,137 +981,143 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 		}
 	}
 
-	private resolveDetails(item: CompletionItem): void {
-		if (!item) {
-			return;
-		}
+	// private resolveDetails(item: CompletionItem): void {
+	// 	if (!item) {
+	// 		return;
+	// 	}
 
-		if (this.currentSuggestionDetails) {
-			this.currentSuggestionDetails.cancel();
-		}
+	// 	if (this.currentSuggestionDetails) {
+	// 		this.currentSuggestionDetails.cancel();
+	// 	}
 
-		this.currentSuggestionDetails = item.resolveDetails(
-			this.editor.getModel().getAssociatedResource(),
-			this.model.getRequestPosition() || this.editor.getPosition()
-		);
+	// 	this.currentSuggestionDetails = item.resolveDetails(
+	// 		this.editor.getModel().getAssociatedResource(),
+	// 		this.model.getRequestPosition() || this.editor.getPosition()
+	// 	);
 
-		this.currentSuggestionDetails.then(() => {
-			this.currentSuggestionDetails = undefined;
-			return this.tree.refresh(item).then(() => this.updateWidgetHeight());
-		})
-			.done(null, err => !isPromiseCanceledError(err) && onUnexpectedError(err));
-	}
+	// 	this.currentSuggestionDetails.then(() => {
+	// 		this.currentSuggestionDetails = undefined;
+	// 		return this.tree.refresh(item).then(() => this.updateWidgetHeight());
+	// 	})
+	// 		.done(null, err => !isPromiseCanceledError(err) && onUnexpectedError(err));
+	// }
 
 	public selectNextPage(): boolean {
-		switch (this.state) {
-			case State.Hidden:
-				return false;
-			case State.Details:
-				this.details.pageDown();
-				return true;
-			case State.Loading:
-				return !this.isAuto;
-			default:
-				this.tree.focusNextPage();
-				return true;
-		}
+		console.log('TODO'); return false;
+		// switch (this.state) {
+		// 	case State.Hidden:
+		// 		return false;
+		// 	case State.Details:
+		// 		this.details.pageDown();
+		// 		return true;
+		// 	case State.Loading:
+		// 		return !this.isAuto;
+		// 	default:
+		// 		this.tree.focusNextPage();
+		// 		return true;
+		// }
 	}
 
 	public selectNext(): boolean {
-		switch (this.state) {
-			case State.Hidden:
-				return false;
-			case State.Details:
-				this.details.scrollDown();
-				return true;
-			case State.Loading:
-				return !this.isAuto;
-			default:
-				const focus = this.tree.getFocus();
-				this.tree.focusNext(1);
-				if (focus === this.tree.getFocus()) {
-					this.tree.focusFirst();
-				}
-				return true;
-		}
+		console.log('TODO'); return false;
+		// switch (this.state) {
+		// 	case State.Hidden:
+		// 		return false;
+		// 	case State.Details:
+		// 		this.details.scrollDown();
+		// 		return true;
+		// 	case State.Loading:
+		// 		return !this.isAuto;
+		// 	default:
+		// 		const focus = this.tree.getFocus();
+		// 		this.tree.focusNext(1);
+		// 		if (focus === this.tree.getFocus()) {
+		// 			this.tree.focusFirst();
+		// 		}
+		// 		return true;
+		// }
 	}
 
 	public selectPreviousPage(): boolean {
-		switch (this.state) {
-			case State.Hidden:
-				return false;
-			case State.Details:
-				this.details.pageUp();
-				return true;
-			case State.Loading:
-				return !this.isAuto;
-			default:
-				this.tree.focusPreviousPage();
-				return true;
-		}
+		console.log('TODO'); return false;
+		// switch (this.state) {
+		// 	case State.Hidden:
+		// 		return false;
+		// 	case State.Details:
+		// 		this.details.pageUp();
+		// 		return true;
+		// 	case State.Loading:
+		// 		return !this.isAuto;
+		// 	default:
+		// 		this.tree.focusPreviousPage();
+		// 		return true;
+		// }
 	}
 
 	public selectPrevious(): boolean {
-		switch (this.state) {
-			case State.Hidden:
-				return false;
-			case State.Details:
-				this.details.scrollUp();
-				return true;
-			case State.Loading:
-				return !this.isAuto;
-			default:
-				const focus = this.tree.getFocus();
-				this.tree.focusPrevious(1);
-				if (focus === this.tree.getFocus()) {
-					this.tree.focusLast();
-				}
-				return true;
-		}
+		console.log('TODO'); return false;
+		// switch (this.state) {
+		// 	case State.Hidden:
+		// 		return false;
+		// 	case State.Details:
+		// 		this.details.scrollUp();
+		// 		return true;
+		// 	case State.Loading:
+		// 		return !this.isAuto;
+		// 	default:
+		// 		const focus = this.tree.getFocus();
+		// 		this.tree.focusPrevious(1);
+		// 		if (focus === this.tree.getFocus()) {
+		// 			this.tree.focusLast();
+		// 		}
+		// 		return true;
+		// }
 	}
 
 	public acceptSelectedSuggestion(): boolean {
-		switch (this.state) {
-			case State.Hidden:
-				return false;
-			case State.Loading:
-				return !this.isAuto;
-			default:
-				const focus = this.tree.getFocus();
-				if (focus) {
-					this.tree.setSelection([focus]);
-				} else {
-					this.model.cancel();
-				}
-				return true;
-		}
+		console.log('TODO'); return false;
+		// switch (this.state) {
+		// 	case State.Hidden:
+		// 		return false;
+		// 	case State.Loading:
+		// 		return !this.isAuto;
+		// 	default:
+		// 		const focus = this.tree.getFocus();
+		// 		if (focus) {
+		// 			this.tree.setSelection([focus]);
+		// 		} else {
+		// 			this.model.cancel();
+		// 		}
+		// 		return true;
+		// }
 	}
 
 	public toggleDetails(): void {
-		if (this.state === State.Details) {
-			this.setState(State.Open);
-			this.editor.focus();
-			return;
-		}
+		console.log('TODO'); return;
+		// if (this.state === State.Details) {
+		// 	this.setState(State.Open);
+		// 	this.editor.focus();
+		// 	return;
+		// }
 
-		if (this.state !== State.Open) {
-			return;
-		}
+		// if (this.state !== State.Open) {
+		// 	return;
+		// }
 
-		const item: CompletionItem = this.tree.getFocus();
+		// const item: CompletionItem = this.tree.getFocus();
 
-		if (!item || !item.suggestion.documentationLabel) {
-			return;
-		}
+		// if (!item || !item.suggestion.documentationLabel) {
+		// 	return;
+		// }
 
-		this.setState(State.Details);
-		this.editor.focus();
+		// this.setState(State.Details);
+		// this.editor.focus();
 	}
 
 	private show(): void {
 		this.updateWidgetHeight();
 		this._onDidVisibilityChange.fire(true);
-		this.tree.layout();
+		// this.list.layout();
 		this.renderDetails();
 		TPromise.timeout(100).done(() => {
 			addClass(this.element, 'visible');
@@ -1004,25 +1169,28 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 		} else if (this.state === State.Details) {
 			height = 12 * 19;
 		} else {
-			const focus = this.tree.getFocus();
-			const focusHeight = focus ? this.renderer.getHeight(this.tree, focus) : 19;
-			height += focusHeight;
+			height = 12 * 19;
+			// const focus = this.tree.getFocus();
+			// const focusHeight = focus ? this.renderer.getHeight(this.tree, focus) : 19;
+			// height += focusHeight;
 
-			const suggestionCount = (this.tree.getContentHeight() - focusHeight) / 19;
-			height += Math.min(suggestionCount, 11) * 19;
+			// const suggestionCount = (this.tree.getContentHeight() - focusHeight) / 19;
+			// height += Math.min(suggestionCount, 11) * 19;
 		}
 
 		this.element.style.height = height + 'px';
-		this.tree.layout(height);
+		// this.tree.layout(height);
+		this.list.layout({width:SuggestWidget.WIDTH, height:height});
 		this.editor.layoutContentWidget(this);
 	}
 
 	private renderDetails(): void {
-		if (this.state !== State.Details) {
-			this.details.render(null);
-		} else {
-			this.details.render(this.tree.getFocus());
-		}
+		// console.log('TODO'); return;
+		// if (this.state !== State.Details) {
+		// 	this.details.render(null);
+		// } else {
+		// 	this.details.render(this.tree.getFocus());
+		// }
 	}
 
 	public dispose(): void {
@@ -1038,9 +1206,10 @@ export class SuggestWidget implements EditorBrowser.IContentWidget, IDisposable 
 		this.treeElement = null;
 		this.details.dispose();
 		this.details = null;
-		this.tree.dispose();
-		this.tree = null;
-		this.renderer = null;
+		this.list.dispose();
+		// this.tree.dispose();
+		// this.tree = null;
+		// this.renderer = null;
 		this.toDispose = disposeAll(this.toDispose);
 		this._onDidVisibilityChange.dispose();
 		this._onDidVisibilityChange = null;

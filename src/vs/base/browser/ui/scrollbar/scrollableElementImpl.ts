@@ -142,7 +142,7 @@ export class ScrollableElement extends Widget implements IScrollableElement {
 		if (synchronous) {
 			this._actualElementDimensions(dimensions);
 		} else {
-			this._onElementDimensionsTimeout.setIfNotSet(() => this._actualElementDimensions(dimensions), 0);
+			this._onElementDimensionsTimeout.cancelAndSet(() => this._actualElementDimensions(dimensions), 0);
 		}
 	}
 

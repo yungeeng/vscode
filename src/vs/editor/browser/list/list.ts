@@ -16,7 +16,7 @@ import DomUtils = require('vs/base/browser/dom');
 import {PrefixSumComputer, IPrefixSumIndexOfResult} from 'vs/editor/common/viewModel/prefixSumComputer';
 import {StyleMutator} from 'vs/base/browser/styleMutator';
 
-interface IListItem {
+export interface IListItem {
 	getHeight(): number;
 	render(out:string[]): void;
 }
@@ -26,7 +26,7 @@ interface IViewModelItem {
 	actual: IListItem;
 }
 
-class ViewModelChangedEvent {
+export class ViewModelChangedEvent {
 	versionId: number;
 	start: number;
 	deleteCnt: number;
@@ -40,7 +40,7 @@ class ViewModelChangedEvent {
 	}
 }
 
-class ViewModel extends Disposable {
+export class ListViewModel extends Disposable {
 
 	private _items: IViewModelItem[];
 	private _versionId: number;
@@ -52,6 +52,10 @@ class ViewModel extends Disposable {
 		super();
 		this._items = this._toMyItems(items);
 		this._versionId = 1;
+	}
+
+	public getCount(): number {
+		return this._items.length;
 	}
 
 	public getAllHeights(): number[] {
@@ -97,13 +101,13 @@ class ViewModel extends Disposable {
 	}
 }
 
-class ViewItem {
+export class ViewItem {
 
-	private _model: ViewModel;
+	private _model: ListViewModel;
 	private _isDirty: boolean;
 	private _domNode: HTMLElement;
 
-	constructor(model:ViewModel) {
+	constructor(model:ListViewModel) {
 		this._model = model;
 		this._isDirty = true;
 		this._domNode = null;
@@ -227,10 +231,10 @@ abstract class ListViewListener extends Disposable {
 class ListViewContext {
 	private _listeners:ListViewListener[];
 	private _events:ListViewEvent[];
-	public model: ViewModel;
+	public model: ListViewModel;
 	private _onEventAdded:()=>void;
 
-	constructor(model: ViewModel, onEventAdded:()=>void) {
+	constructor(model: ListViewModel, onEventAdded:()=>void) {
 		this.model = model;
 		this._listeners = [];
 		this._events = [];
@@ -351,7 +355,7 @@ class ListViewLayout extends ListViewListener {
 	public onDimensionChanged(e:ListViewDimensionChangedEvent): void {
 		this._scrollable.setWidth(e.newDimension.width);
 		this._scrollable.setHeight(e.newDimension.height);
-		console.log('SENDING NEW DIMENSIONS!!!');
+		// console.log('SENDING NEW DIMENSIONS!!!');
 		this._scrollbar.onElementDimensions({
 			width: e.newDimension.width,
 			height: e.newDimension.height
@@ -441,8 +445,9 @@ class ListView extends ListViewListener {
 	private _layout: ListViewLayout;
 	private _renderAnimationFrame: IDisposable;
 
-	constructor(dimension: IDimension, model: ViewModel) {
+	constructor(dimension: IDimension, model: ListViewModel) {
 		super();
+		// console.log('listview ctor');
 		this._ctx = new ListViewContext(model, () => {
 			this._scheduleRender();
 		});
@@ -466,6 +471,7 @@ class ListView extends ListViewListener {
 	}
 
 	public dispose(): void {
+		// console.log('listview dispose');
 		if (this._renderAnimationFrame) {
 			this._renderAnimationFrame.dispose();
 			this._renderAnimationFrame = null;
@@ -573,7 +579,7 @@ class ListView extends ListViewListener {
 			}
 		}
 
-		console.log("DONE HANDLING!!!!");
+		// console.log("DONE HANDLING!!!!");
 		// handle changed
 		// this._layoutData.changeValues(e.changedStart, e.changed);
 
@@ -588,6 +594,7 @@ class ListView extends ListViewListener {
 	// -- end events
 
 	public acceptDimension(dimension: IDimension): void {
+		// console.log('acceptDimension: ' + JSON.stringify(dimension));
 		this._ctx.emitSoon(new ListViewDimensionChangedEvent(dimension));
 	}
 
@@ -903,15 +910,15 @@ class ListView extends ListViewListener {
 	}
 }
 
-interface IDimension {
+export interface IDimension {
 	width: number;
 	height: number;
 }
 
-class ListWidget {
+export class ListWidget {
 
 	private _domNode: HTMLElement;
-	private _model: ViewModel;
+	private _model: ListViewModel;
 	private _modelDisposable: IDisposable[];
 	private _view: ListView;
 	private _domNodeDimension: IDimension;
@@ -924,7 +931,15 @@ class ListWidget {
 		this._view = null;
 	}
 
-	public setModel(model: ViewModel): void {
+	dispose(): void {
+		this.setModel(null);
+	}
+
+	public getModel(): ListViewModel {
+		return this._model;
+	}
+
+	public setModel(model: ListViewModel): void {
 		if (this._view) {
 			this._domNode.removeChild(this._view.domNode);
 			this._view.dispose();
@@ -999,6 +1014,7 @@ class Scrollable extends Disposable implements IScrollable {
 	}
 
 	public setWidth(width: number): void {
+		// console.log('scrollable - setWidth ' + width);
 		width = Math.floor(width);
 		if (width < 0) {
 			width = 0;
@@ -1064,7 +1080,7 @@ class Scrollable extends Disposable implements IScrollable {
 	}
 
 	public setHeight(height: number): void {
-		console.log('setHeight called!!!');
+		// console.log('scrollable - setHeight ' + height);
 		height = Math.floor(height);
 		if (height < 0) {
 			height = 0;
@@ -1148,14 +1164,6 @@ class Scrollable extends Disposable implements IScrollable {
 }
 
 
-var container = document.createElement('div');
-container.style.width = '500px';
-container.style.height = '500px';
-container.style.background = 'orange';
-container.style.fontSize = '15px';
-container.style.position = 'fixed';
-container.style.zIndex = '100';
-document.body.appendChild(container);
 
 function randInt(min:number, max:number): number {
 	return min + Math.round(Math.random() * (max - min));
@@ -1197,7 +1205,16 @@ class MySpecialItem implements IListItem {
 
 }
 
+if (false)
 {
+var container = document.createElement('div');
+container.style.width = '500px';
+container.style.height = '500px';
+container.style.background = 'orange';
+container.style.fontSize = '15px';
+container.style.position = 'fixed';
+container.style.zIndex = '100';
+document.body.appendChild(container);
 	let w = new ListWidget(container);
 	let items:IListItem[] = [];
 	for (var i = 0; i < 1000; i++) {
@@ -1206,7 +1223,7 @@ class MySpecialItem implements IListItem {
 			i + '. LINE ' + i + ', '+ '. LINE ' + i+ '. LINE ' + i+ '. LINE ' + i// + randStr(),
 		));
 	}
-	let vm = new ViewModel(items);
+	let vm = new ListViewModel(items);
 	w.setModel(vm);
 
 	setTimeout(() => {
