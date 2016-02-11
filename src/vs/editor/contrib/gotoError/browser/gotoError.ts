@@ -198,6 +198,7 @@ var zoneOptions: ZoneWidget.IOptions = {
 
 class MarkerNavigationWidget extends ZoneWidget.ZoneWidget {
 
+	private _id: string;
 	private _eventService: IEventService;
 	private _editorService: IEditorService;
 	private _element: Builder.Builder;
@@ -206,6 +207,7 @@ class MarkerNavigationWidget extends ZoneWidget.ZoneWidget {
 
 	constructor(eventService:IEventService, editorService:IEditorService, editor: EditorBrowser.ICodeEditor, private _model: MarkerModel) {
 		super(editor, zoneOptions);
+		this._id = this.editor.generateUniqueId();
 		this._eventService = eventService;
 		this._editorService = editorService;
 		this.create();
@@ -225,10 +227,24 @@ class MarkerNavigationWidget extends ZoneWidget.ZoneWidget {
 		$container.on(DOM.EventType.CLICK, () => {
 			this.editor.focus();
 		});
+
+		// this._element.getHTMLElement().setAttribute('role', 'alert');
+		// this._element.getHTMLElement().setAttribute('role', 'tooltip');
+		this._element.getHTMLElement().setAttribute('role', 'option');
+		// this._element.getHTMLElement().setAttribute('aria-hidden', 'false');
+		this._element.getHTMLElement().id = 'asdx';//this._id;
 	}
 
 	private _wireModelAndView(): void {
 		this._model.onCurrentMarkerChanged(this.showAtMarker, this, this._callOnDispose);
+	}
+
+	public show(where:EditorCommon.IRange, heightInLines:number):void;
+	public show(where:EditorCommon.IPosition, heightInLines:number):void;
+	public show(where:any, heightInLines:number):void {
+		// this._element.getHTMLElement().innerHTML = 'ALEX IS COOl1!!';
+		super.show(where, heightInLines);
+		this.editor.setActiveDescendant(this._id);
 	}
 
 	public showAtMarker(marker: IMarker): void {

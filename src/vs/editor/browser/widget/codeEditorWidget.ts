@@ -82,6 +82,12 @@ export class CodeEditorWidget extends CommonCodeEditor implements EditorBrowser.
 		}
 	}
 
+	public setActiveDescendant(id:string): void {
+		if (this._view) {
+			this._view.setActiveDescendant(id);
+		}
+	}
+
 	protected _createConfiguration(options:EditorCommon.ICodeEditorWidgetCreationOptions, indentationGuesser:IIndentationGuesser): CommonEditorConfiguration {
 		return new Configuration(options, this.domElement, indentationGuesser);
 	}

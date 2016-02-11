@@ -30,6 +30,7 @@ import {EditorState} from 'vs/editor/common/core/editorState';
 import {IKeybindingScopeLocation, IKeybindingService, IKeybindingContextKey} from 'vs/platform/keybinding/common/keybindingService';
 import {CommonEditorConfiguration, IIndentationGuesser} from 'vs/editor/common/config/commonEditorConfig';
 import {DefaultConfig} from 'vs/editor/common/config/defaultConfig';
+import {IdGenerator} from 'vs/editor/common/core/idGenerator';
 
 var EDITOR_ID = 0;
 
@@ -38,6 +39,7 @@ export abstract class CommonCodeEditor extends EventEmitter.EventEmitter impleme
 	protected domElement: IKeybindingScopeLocation;
 
 	protected id:number;
+	private _widgetIdGenerator: IdGenerator;
 
 	_lifetimeDispose: IDisposable[];
 	_configuration:CommonEditorConfiguration;
@@ -82,6 +84,7 @@ export abstract class CommonCodeEditor extends EventEmitter.EventEmitter impleme
 		this.domElement = domElement;
 
 		this.id = (++EDITOR_ID);
+		this._widgetIdGenerator = new IdGenerator('MCE-' + this.id + '-');
 		this._codeEditorService = codeEditorService;
 
 		var timerEvent = Timer.start(Timer.Topic.EDITOR, 'CodeEditor.ctor');
@@ -139,6 +142,12 @@ export abstract class CommonCodeEditor extends EventEmitter.EventEmitter impleme
 
 		this._codeEditorService.addCodeEditor(this);
 	}
+
+	public generateUniqueId(): string {
+		return this._widgetIdGenerator.generate();
+	}
+
+	public abstract setActiveDescendant(id:string): void;
 
 	protected abstract _createConfiguration(options:EditorCommon.ICodeEditorWidgetCreationOptions, indentationGuesser:IIndentationGuesser): CommonEditorConfiguration;
 

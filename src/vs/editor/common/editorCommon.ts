@@ -3036,6 +3036,9 @@ export interface IRangeWithMessage {
 
 export interface ICommonCodeEditor extends IEditor {
 
+	generateUniqueId(): string;
+	setActiveDescendant(id:string): void;
+
 	/**
 	 * Get a contribution of this editor.
 	 * @id Unique identifier of the contribution.

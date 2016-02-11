@@ -75,6 +75,8 @@ export interface IPointerHandlerHelper {
 export interface IView extends Lifecycle.IDisposable {
 	domNode: HTMLElement;
 
+	setActiveDescendant(id:string): void;
+
 	getInternalEventBus(): EventEmitter.IEventEmitter;
 
 	createOverviewRuler(cssClassName:string, minimumHeight:number, maximumHeight:number): IOverviewRuler;

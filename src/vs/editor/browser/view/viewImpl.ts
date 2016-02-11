@@ -165,18 +165,24 @@ export class View extends ViewEventHandler implements EditorBrowser.IView, Lifec
 	}
 
 	private createTextArea(keybindingService: IKeybindingService): void {
+		let blah = document.createElement('div');
+		blah.setAttribute('role', 'option');
+		blah.id = "asd";
+		blah.innerHTML = 'Alex is cool!';
+		document.body.appendChild(blah);
 		// Text Area (The focus will always be in the textarea when the cursor is blinking)
-		this.textArea = <HTMLTextAreaElement>document.createElement('textarea');
+		this.textArea = <HTMLTextAreaElement>document.createElement('input');
 		this._keybindingService = keybindingService.createScoped(this.textArea);
 		this._editorTextFocusContextKey = this._keybindingService.createKey(EditorCommon.KEYBINDING_CONTEXT_EDITOR_TEXT_FOCUS, undefined);
 		this.textArea.className = EditorBrowser.ClassNames.TEXTAREA;
+		this.textArea.setAttribute('type', 'text');
 		this.textArea.setAttribute('wrap', 'off');
 		this.textArea.setAttribute('autocorrect', 'off');
 		this.textArea.setAttribute('autocapitalize', 'off');
 		this.textArea.setAttribute('spellcheck', 'false');
 		this.textArea.setAttribute('aria-label', this.context.configuration.editor.ariaLabel);
 		this.textArea.setAttribute('role', 'textbox');
-		this.textArea.setAttribute('aria-multiline', 'true');
+		// this.textArea.setAttribute('aria-multiline', 'true');
 		StyleMutator.setTop(this.textArea, 0);
 		StyleMutator.setLeft(this.textArea, 0);
 		// Give textarea same font size & line height as editor, for the IME case (when the textarea is visible)
@@ -503,6 +509,30 @@ export class View extends ViewEventHandler implements EditorBrowser.IView, Lifec
 	}
 
 	// --- begin Code Editor APIs
+
+	public setActiveDescendant(id:string): void {
+
+// 		 <input
+//  	type="text"
+
+// 	aria-activedescendant="asd"
+// 	aria-autocomplete="both"
+// 	role="combobox"
+// 	aria-haspopup="true"
+// 	aria-label="Suche"
+
+//    	id="cb1-edit"
+// >
+// <div id="asd" role="option">Hello world!</div>
+
+		this.textArea.setAttribute('role', 'combobox');
+		// this.textArea.setAttribute('aria-owns', id);
+		// this.textArea.setAttribute('aria-expanded', 'true');
+		this.textArea.setAttribute('aria-haspopup', 'true');
+		this.textArea.setAttribute('aria-autocomplete', 'both');
+		// this.textArea.setAttribute('aria-activedescendant', id);
+		this.textArea.setAttribute('aria-activedescendant', 'asd');
+	}
 
 	private codeEditorHelper:EditorBrowser.ICodeEditorHelper;
 	public getCodeEditorHelper(): EditorBrowser.ICodeEditorHelper {
