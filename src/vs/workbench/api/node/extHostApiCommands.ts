@@ -188,6 +188,13 @@ class ExtHostApiCommands {
 				{ name: 'newWindow', description: '(optional) Wether to open the folder in a new window or the same. Defaults to opening in the same window.', constraint: value => value === void 0 || typeof value === 'boolean' }
 			]
 		});
+
+		this._register('vscode.getBaseTheme', () => {
+			return this._commands.executeCommand('_workbench.getBaseTheme');
+		}, {
+			description: 'Get the base theme which defines the colors around the editor',
+			args: []
+		});
 	}
 
 	// --- command impl
