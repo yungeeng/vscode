@@ -197,6 +197,13 @@ class ExtHostApiCommands {
 				{ name: 'configuration', description: '(optional) Name of the debug configuration from \'launch.json\' to use. Or a configuration json object to use.' }
 			]
 		});
+
+		this._register('vscode.getBaseTheme', () => {
+			return this._commands.executeCommand('_workbench.getBaseTheme');
+		}, {
+			description: 'Get the base theme which defines the colors around the editor',
+			args: []
+		});
 	}
 
 	// --- command impl

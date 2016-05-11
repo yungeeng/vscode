@@ -18,8 +18,10 @@ import {IWorkspaceContextService} from 'vs/platform/workspace/common/workspace';
 import {IQuickOpenService} from 'vs/workbench/services/quickopen/common/quickOpenService';
 import {IConfigurationService} from 'vs/platform/configuration/common/configuration';
 import {KeybindingsRegistry} from 'vs/platform/keybinding/common/keybindingsRegistry';
-import {ServicesAccessor} from 'vs/platform/instantiation/common/instantiation';
+import {IInstantiationService, ServicesAccessor} from 'vs/platform/instantiation/common/instantiation';
 import * as browser from 'vs/base/browser/browser';
+import {IThemeService} from 'vs/workbench/services/themes/common/themeService';
+import {getBaseThemeId} from 'vs/platform/theme/common/themes';
 
 import {ipcRenderer as ipc, webFrame, remote} from 'electron';
 
@@ -456,6 +458,30 @@ KeybindingsRegistry.registerCommandDesc({
 		} else {
 			ipc.send(ipcMessage);
 		}
+	},
+	when: undefined,
+	primary: undefined
+});
+
+class ThemeAccessor {
+
+	constructor(
+		@IThemeService private themeService: IThemeService
+	) {
+	}
+
+	public getTheme() {
+		return getBaseThemeId(this.themeService.getTheme());
+	}
+}
+
+KeybindingsRegistry.registerCommandDesc({
+	id: '_workbench.getBaseTheme',
+	weight: KeybindingsRegistry.WEIGHT.workbenchContrib(0),
+	handler(accessor: ServicesAccessor) {
+
+		let themeAccessor = accessor.get(IInstantiationService).createInstance(ThemeAccessor);
+		return themeAccessor.getTheme();
 	},
 	when: undefined,
 	primary: undefined
