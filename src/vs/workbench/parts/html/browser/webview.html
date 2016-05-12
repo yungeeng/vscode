@@ -78,6 +78,9 @@
 
 			// write new content onto iframe
 			target.contentDocument.open('text/html', 'replace');
+			// set DOCTYPE for newDocument explicitly as DOMParser.parseFromString strips it off
+			// and DOCTYPE is needed in iframe to ensure that user agent stylesheet is overritten correctly
+			target.contentDocument.write("<!DOCTYPE html>");
 			target.contentDocument.write(newDocument.documentElement.innerHTML);
 			target.contentDocument.close();
 
