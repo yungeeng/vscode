@@ -18,7 +18,7 @@ import {BaseEditor} from 'vs/workbench/browser/parts/editor/baseEditor';
 import {Position} from 'vs/platform/editor/common/editor';
 import {ITelemetryService} from 'vs/platform/telemetry/common/telemetry';
 import {IWorkspaceContextService} from 'vs/platform/workspace/common/workspace';
-import {isLightTheme} from 'vs/platform/theme/common/themes';
+import {isLightTheme, isDarkTheme} from 'vs/platform/theme/common/themes';
 import {IWorkbenchEditorService} from 'vs/workbench/services/editor/common/editorService';
 import {BaseTextEditorModel} from 'vs/workbench/common/editor/textEditorModel';
 import {HtmlInput} from 'vs/workbench/parts/html/common/htmlInput';
@@ -147,9 +147,6 @@ class ManagedWebview {
 		::-webkit-scrollbar {
 			width: 14px;
 			height: 10px;
-		}
-		::-webkit-scrollbar-thumb:hover {
-			background-color: rgba(100, 100, 100, 0.7);
 		}`;
 
 		if (isLightTheme(themeId)) {
@@ -157,16 +154,33 @@ class ManagedWebview {
 			::-webkit-scrollbar-thumb {
 				background-color: rgba(100, 100, 100, 0.4);
 			}
+			::-webkit-scrollbar-thumb:hover {
+				background-color: rgba(100, 100, 100, 0.7);
+			}
 			::-webkit-scrollbar-thumb:active {
 				background-color: rgba(0, 0, 0, 0.6);
 			}`;
-		} else {
+		} else if (isDarkTheme(themeId)){
 			value += `
 			::-webkit-scrollbar-thumb {
 				background-color: rgba(121, 121, 121, 0.4);
 			}
+			::-webkit-scrollbar-thumb:hover {
+				background-color: rgba(100, 100, 100, 0.7);
+			}
 			::-webkit-scrollbar-thumb:active {
 				background-color: rgba(85, 85, 85, 0.8);
+			}`;
+		} else {
+			value += `
+			::-webkit-scrollbar-thumb {
+				background-color: rgba(111, 195, 223, 0.3);
+		  }
+			::-webkit-scrollbar-thumb:active {
+				background-color: rgba(111, 195, 223, 0.4);
+			}
+			::-webkit-scrollbar-thumb:hover {
+				background-color: rgba(111, 195, 223, 0.4);
 			}`;
 		}
 
