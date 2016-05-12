@@ -176,7 +176,7 @@ class ManagedWebview {
 			}`;
 		}
 
-		this._send('styles', value);
+		this._send('styles', value, themeId);
 	}
 }
 

@@ -18,7 +18,7 @@
 			initData.baseUrl = value;
 		});
 
-		ipcRenderer.on('styles', function(event, value) {
+		ipcRenderer.on('styles', function(event, value, themeId) {
 			initData.styles = value;
 
 			// webview
@@ -30,6 +30,12 @@
 			if(defaultStyles) {
 				defaultStyles.innerHTML = value;
 			}
+
+			const currentTheme = themeId.split(' ')[0];
+			const theme = (currentTheme === 'vs-dark') ? 1 : (currentTheme === 'vs') ? 0 : 2;
+
+			let body = target.contentDocument.getElementById('container');
+			body.className = (theme === 0) ? 'monaco-editor vs' : (theme === 1) ? 'monaco-editor vs-dark' : 'monaco-editor hc-black';
 		});
 
 		// propagate focus
