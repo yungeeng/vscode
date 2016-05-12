@@ -133,12 +133,6 @@ class ManagedWebview {
 		body {
 			margin: 0;
 		}
-		* {
-			color: ${color};
-			background-color: ${backgroundColor};
-			font-family: ${fontFamily};
-			font-size: ${fontSize};
-		}
 		img {
 			max-width: 100%;
 			max-height: 100%;
