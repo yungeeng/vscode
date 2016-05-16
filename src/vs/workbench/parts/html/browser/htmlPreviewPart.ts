@@ -149,6 +149,10 @@ class ManagedWebview {
 			height: 10px;
 		}`;
 
+		let bodyClasses = {
+			remove: ['monaco-editor', 'vs', 'vs-dark', 'hc-black']
+		};
+
 		if (isLightTheme(themeId)) {
 			value += `
 			::-webkit-scrollbar-thumb {
@@ -160,6 +164,9 @@ class ManagedWebview {
 			::-webkit-scrollbar-thumb:active {
 				background-color: rgba(0, 0, 0, 0.6);
 			}`;
+
+			bodyClasses['add'] = 'monaco-editor vs';
+
 		} else if (isDarkTheme(themeId)){
 			value += `
 			::-webkit-scrollbar-thumb {
@@ -171,6 +178,9 @@ class ManagedWebview {
 			::-webkit-scrollbar-thumb:active {
 				background-color: rgba(85, 85, 85, 0.8);
 			}`;
+
+			bodyClasses['add'] = 'monaco-editor vs-dark';
+
 		} else {
 			value += `
 			::-webkit-scrollbar-thumb {
@@ -182,9 +192,11 @@ class ManagedWebview {
 			::-webkit-scrollbar-thumb:hover {
 				background-color: rgba(111, 195, 223, 0.4);
 			}`;
+
+			bodyClasses['add'] = 'monaco-editor hc-black';
 		}
 
-		this._send('styles', value, themeId);
+		this._send('styles', value, bodyClasses);
 	}
 }
 

@@ -18,8 +18,22 @@
 			initData.baseUrl = value;
 		});
 
-		ipcRenderer.on('styles', function(event, value, themeId) {
+		function styleBody(body) {
+			let currentClasses = body.className.split(' ');
+			currentClasses = currentClasses.filter((cl) => {
+				return !initData.bodyClasses.remove.includes(cl);
+			});
+
+			console.log('currentClasses = ' + currentClasses);
+
+			body.className= currentClasses.join(' ') + ' ' + initData.bodyClasses.add;
+		}
+
+		ipcRenderer.on('styles', function(event, value, bodyClasses) {
 			initData.styles = value;
+			initData.bodyClasses = bodyClasses;
+
+			console.log(initData.bodyClasses);
 
 			// webview
 			let defaultStyles = document.getElementById('_defaultStyles');
@@ -31,11 +45,10 @@
 				defaultStyles.innerHTML = value;
 			}
 
-			const currentTheme = themeId.split(' ')[0];
-			const theme = (currentTheme === 'vs-dark') ? 1 : (currentTheme === 'vs') ? 0 : 2;
-
-			let body = target.contentDocument.getElementById('container');
-			body.className = (theme === 0) ? 'monaco-editor vs' : (theme === 1) ? 'monaco-editor vs-dark' : 'monaco-editor hc-black';
+			let body = target.contentDocument.getElementsByTagName('body');
+			if (body.length > 0) {
+				styleBody(body[0]);
+			}
 		});
 
 		// propagate focus
@@ -80,7 +93,10 @@
 						node = node.parentNode;
 					}
 				});`
+
+
 			newDocument.body.appendChild(defaultScripts);
+			styleBody(newDocument.body);
 
 			// write new content onto iframe
 			target.contentDocument.open('text/html', 'replace');
