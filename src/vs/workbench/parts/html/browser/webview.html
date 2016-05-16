@@ -24,30 +24,31 @@
 				return !initData.bodyClasses.remove.includes(cl);
 			});
 
-			console.log('currentClasses = ' + currentClasses);
-
 			body.className= currentClasses.join(' ') + ' ' + initData.bodyClasses.add;
 		}
 
-		ipcRenderer.on('styles', function(event, value, bodyClasses) {
+		function isThemeAware(body) {
+			return body.className.split(' ').includes('vs-theme-aware');
+		}
+
+		ipcRenderer.on('styles', function(event, value, bodyClasses, autoThemeRules) {
 			initData.styles = value;
 			initData.bodyClasses = bodyClasses;
-
-			console.log(initData.bodyClasses);
+			initData.autoThemeRules = autoThemeRules;
 
 			// webview
 			let defaultStyles = document.getElementById('_defaultStyles');
 			defaultStyles.innerHTML = value;
 
-			// iframe
-			defaultStyles = target.contentDocument.getElementById('_defaultStyles');
-			if(defaultStyles) {
-				defaultStyles.innerHTML = value;
-			}
-
 			let body = target.contentDocument.getElementsByTagName('body');
 			if (body.length > 0) {
 				styleBody(body[0]);
+			}
+
+			// iframe
+			defaultStyles = target.contentDocument.getElementById('_defaultStyles');
+			if(defaultStyles) {
+				defaultStyles.innerHTML = value + (vsThemeAware(body[0]) ? '' : initData.autoThemeRules);
 			}
 		});
 
@@ -72,7 +73,7 @@
 			// apply default styles
 			const defaultStyles = newDocument.createElement('style');
 			defaultStyles.id = '_defaultStyles';
-			defaultStyles.innerHTML = initData.styles;
+			defaultStyles.innerHTML = initData.styles + (isThemeAware(newDocument.body) ? '' : initData.autoThemeRules);
 			if (newDocument.head.hasChildNodes()) {
 				newDocument.head.insertBefore(defaultStyles, newDocument.head.firstChild);
 			} else {

@@ -129,6 +129,15 @@ class ManagedWebview {
 	style(themeId: string): void {
 		const {color, backgroundColor, fontFamily, fontSize} = window.getComputedStyle(this._styleElement);
 
+		let autoThemeRules = `
+			* {
+			color: ${color};
+			background-color: ${backgroundColor};
+			font-family: ${fontFamily};
+			font-size: ${fontSize};
+		}
+		`
+
 		let value = `
 		body {
 			margin: 0;
@@ -196,7 +205,7 @@ class ManagedWebview {
 			bodyClasses['add'] = 'monaco-editor hc-black';
 		}
 
-		this._send('styles', value, bodyClasses);
+		this._send('styles', value, bodyClasses, autoThemeRules);
 	}
 }
 
