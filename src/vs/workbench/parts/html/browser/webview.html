@@ -86,8 +86,14 @@
 				document.body.addEventListener('click', function(event) {
 					let node = event.target;
 					while (node) {
-						if (node.tagName === 'A' && node.href && node.href[0] !== '#') {
-							window.parent.postMessage({ command: 'did-click-link', data: node.href }, 'file://');
+						if (node.tagName === 'A' && node.href) {
+							if (node.href.indexOf('${initData.baseUrl}') >= 0 && node.hash) {
+								window.document.getElementById(node.hash.substr(1, node.hash.length - 1)).scrollIntoView();
+							}
+							else {
+								window.parent.postMessage({ command: 'did-click-link', data: node.href }, 'file://');
+							}
+
 							event.preventDefault();
 							break;
 						}
