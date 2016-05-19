@@ -48,7 +48,7 @@
 			// iframe
 			defaultStyles = target.contentDocument.getElementById('_defaultStyles');
 			if(defaultStyles) {
-				defaultStyles.innerHTML = value + (vsThemeAware(body[0]) ? '' : initData.autoThemeRules);
+				defaultStyles.innerHTML = value + (isThemeAware(body[0]) ? '' : initData.autoThemeRules);
 			}
 		});
 
