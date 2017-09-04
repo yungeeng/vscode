@@ -263,6 +263,13 @@ function toExtension(galleryExtension: IRawGalleryExtension, extensionsGalleryUr
 			dependencies: getDependencies(version),
 			engine: getEngine(version)
 		},
+		/* __GDPR__FRAGMENT__
+		   "GalleryExtensionTelemetryData2" : {
+			  "index" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "searchText": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "querySource": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+		   }
+		 */
 		telemetryData: {
 			index: ((query.pageNumber - 1) * query.pageSize) + index,
 			searchText: query.searchText,
@@ -311,6 +318,12 @@ export class ExtensionGalleryService implements IExtensionGalleryService {
 		let text = options.text || '';
 		const pageSize = getOrDefault(options, o => o.pageSize, 50);
 
+		/* __GDPR__
+		   "galleryService:query" : {
+			  "type" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "text": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+		   }
+		 */
 		this.telemetryService.publicLog('galleryService:query', { type, text });
 
 		let query = new Query()
@@ -425,6 +438,14 @@ export class ExtensionGalleryService implements IExtensionGalleryService {
 			const zipPath = path.join(tmpdir(), uuid.generateUuid());
 			const data = getGalleryExtensionTelemetryData(extension);
 			const startTime = new Date().getTime();
+			/* __GDPR__
+			   "galleryService:downloadVSIX" : {
+				  "duration": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "PerformanceAndHealth," },
+				  "${include}": [
+					 "${GalleryExtensionTelemetryData}"
+				  ]
+			   }
+			 */
 			const log = duration => this.telemetryService.publicLog('galleryService:downloadVSIX', assign(data, { duration }));
 
 			return this.getAsset(extension.assets.download)
@@ -565,7 +586,20 @@ export class ExtensionGalleryService implements IExtensionGalleryService {
 				}
 
 				const message = getErrorMessage(err);
+				/* __GDPR__
+				   "galleryService:requestError" : {
+					  "url" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+					  "cdn": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+					  "message": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+				   }
+				 */
 				this.telemetryService.publicLog('galleryService:requestError', { url, cdn: true, message });
+				/* __GDPR__
+				   "galleryService:cdnFallback" : {
+					  "url" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+					  "message": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+				   }
+				 */
 				this.telemetryService.publicLog('galleryService:cdnFallback', { url, message });
 
 				const fallbackOptions = assign({}, options, { url: fallbackUrl });
@@ -575,6 +609,13 @@ export class ExtensionGalleryService implements IExtensionGalleryService {
 					}
 
 					const message = getErrorMessage(err);
+					/* __GDPR__
+					   "galleryService:requestError" : {
+						  "url" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+						  "cdn": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+						  "message": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+					   }
+					 */
 					this.telemetryService.publicLog('galleryService:requestError', { url: fallbackUrl, cdn: false, message });
 					return TPromise.wrapError<IRequestContext>(err);
 				});
