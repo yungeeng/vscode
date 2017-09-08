@@ -325,6 +325,11 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 
 		keybindingsTelemetry(telemetryService, this);
 		let data = KeyboardMapperFactory.INSTANCE.getCurrentKeyboardLayout();
+		/* __GDPR__
+		   "keyboardLayout" : {
+			  "currentKeyboardLayout" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+		   }
+		 */
 		telemetryService.publicLog('keyboardLayout', {
 			currentKeyboardLayout: data
 		});
@@ -412,6 +417,11 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		if (!isFirstTime) {
 			let cnt = extraUserKeybindings.length;
 
+			/* __GDPR__
+			   "customKeybindingsChanged" : {
+				  "keyCount" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+			   }
+			 */
 			this.telemetryService.publicLog('customKeybindingsChanged', {
 				keyCount: cnt
 			});
