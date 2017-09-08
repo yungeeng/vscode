@@ -834,6 +834,9 @@ export class SearchViewlet extends Viewlet {
 	}
 
 	public toggleQueryDetails(moveFocus?: boolean, show?: boolean, skipLayout?: boolean, reverse?: boolean): void {
+		/* __GDPR__
+		   "search.toggleQueryDetails" : {}
+		 */
 		this.telemetryService.publicLog('search.toggleQueryDetails');
 
 		let cls = 'more';
@@ -1307,6 +1310,9 @@ export class SearchViewlet extends Viewlet {
 			return TPromise.as(true);
 		}
 
+		/* __GDPR__
+		   "searchResultChosen" : {}
+		 */
 		this.telemetryService.publicLog('searchResultChosen');
 
 		return (this.viewModel.isReplaceActive() && !!this.viewModel.replaceString) ?

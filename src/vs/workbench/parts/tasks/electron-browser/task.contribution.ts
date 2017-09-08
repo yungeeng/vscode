@@ -171,6 +171,12 @@ abstract class OpenTaskConfigurationAction extends Action {
 					}
 					configFileCreated = true;
 					return this.fileService.createFile(this.contextService.toResource('.vscode/tasks.json'), content).then((result) => {
+						/* __GDPR__
+						   "taskService.template" : {
+							  "templateId" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+							  "autoDetect": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+						   }
+						 */
 						this.telemetryService.publicLog(TaskService.TemplateTelemetryEventName, {
 							templateId: selection.id,
 							autoDetect: selection.autoDetect
@@ -1142,6 +1148,11 @@ class TaskService extends EventEmitter implements ITaskService {
 			let event: TaskCustomizationTelementryEvent = {
 				properties: properties ? Object.getOwnPropertyNames(properties) : []
 			};
+			/* __GDPR__
+			   "taskService.customize" : {
+				  "properties" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+			   }
+			 */
 			this.telemetryService.publicLog(TaskService.CustomizationTelemetryEventName, event);
 			if (openConfig) {
 				let resource = this.contextService.toResource('.vscode/tasks.json'); // TODO@Dirk (https://github.com/Microsoft/vscode/issues/29454)

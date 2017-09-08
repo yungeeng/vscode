@@ -296,6 +296,12 @@ abstract class BaseCommandEntry extends QuickOpenEntryGroup {
 		TPromise.timeout(50).done(() => {
 			if (action && (!(action instanceof Action) || action.enabled)) {
 				try {
+					/* __GDPR__
+					   "workbenchActionExecuted" : {
+						  "id" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+						  "from": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+					   }
+					 */
 					this.telemetryService.publicLog('workbenchActionExecuted', { id: action.id, from: 'quick open' });
 					(action.run() || TPromise.as(null)).done(() => {
 						if (action instanceof Action) {
