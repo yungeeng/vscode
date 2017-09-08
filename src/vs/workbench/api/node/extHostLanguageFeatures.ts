@@ -876,6 +876,7 @@ export class ExtHostLanguageFeatures implements ExtHostLanguageFeaturesShape {
 		const handle = this._nextHandle();
 		this._adapter.set(handle, new HoverAdapter(this._documents, provider, once((name, data) => {
 			data['extension'] = extensionId;
+			// GDPR__TODO
 			this._telemetry.$publicLog(name, data);
 		})));
 		this._proxy.$registerHoverProvider(handle, selector);

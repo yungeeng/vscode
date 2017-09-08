@@ -1657,6 +1657,7 @@ class FileDialog {
 
 			// Telemetry
 			if (options.telemetryEventName) {
+				// __GDPR__TODO
 				this.telemetryService.publicLog(options.telemetryEventName, {
 					...options.telemetryExtraData,
 					outcome: numberOfPaths ? 'success' : 'canceled',
