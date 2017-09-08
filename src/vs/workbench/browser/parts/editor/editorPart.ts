@@ -164,6 +164,13 @@ export class EditorPart extends Part implements IEditorPart, IEditorGroupService
 
 			this.revealIfOpen = editorConfig.revealIfOpen;
 
+			/* __GDPR__
+			   "workbenchEditorConfiguration" : {
+					"${include}": [
+					   "${IWorkbenchEditorConfiguration}"
+					]
+			   }
+			 */
 			this.telemetryService.publicLog('workbenchEditorConfiguration', editorConfig);
 		} else {
 			this.tabOptions = {
@@ -244,10 +251,24 @@ export class EditorPart extends Part implements IEditorPart, IEditorGroupService
 	}
 
 	private onEditorOpened(identifier: EditorIdentifier): void {
+		/* __GDPR__
+		   "editorOpened" : {
+			   "${include}": [
+				  "${EditorTelemetryDescriptor}"
+			   ]
+		   }
+		 */
 		this.telemetryService.publicLog('editorOpened', identifier.editor.getTelemetryDescriptor());
 	}
 
 	private onEditorClosed(event: EditorCloseEvent): void {
+		/* __GDPR__
+		   "editorClosed" : {
+			   "${include}": [
+				  "${EditorTelemetryDescriptor}"
+			   ]
+		   }
+		 */
 		this.telemetryService.publicLog('editorClosed', event.editor.getTelemetryDescriptor());
 	}
 

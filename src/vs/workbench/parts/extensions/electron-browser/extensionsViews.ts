@@ -314,6 +314,11 @@ export class ExtensionsListView extends CollapsibleView {
 					.filter(name => local.every(ext => `${ext.publisher}.${ext.name}` !== name))
 					.filter(name => name.toLowerCase().indexOf(value) > -1);
 
+				/* __GDPR__
+				   "extensionRecommendations:open" : {
+					  "count" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+				   }
+				 */
 				this.telemetryService.publicLog('extensionRecommendations:open', { count: names.length });
 
 				if (!names.length) {
@@ -330,6 +335,11 @@ export class ExtensionsListView extends CollapsibleView {
 		return this.tipsService.getWorkspaceRecommendations()
 			.then(recommendations => {
 				const names = recommendations.filter(name => name.toLowerCase().indexOf(value) > -1);
+				/* __GDPR__
+				   "extensionWorkspaceRecommendations:open" : {
+					  "count" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+				   }
+				 */
 				this.telemetryService.publicLog('extensionWorkspaceRecommendations:open', { count: names.length });
 
 				if (!names.length) {
@@ -345,6 +355,11 @@ export class ExtensionsListView extends CollapsibleView {
 		const value = query.value.replace(/@recommended:keymaps/g, '').trim().toLowerCase();
 		const names = this.tipsService.getKeymapRecommendations()
 			.filter(name => name.toLowerCase().indexOf(value) > -1);
+		/* __GDPR__
+		   "extensionKeymapRecommendations:open" : {
+			  "count" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+		   }
+		 */
 		this.telemetryService.publicLog('extensionKeymapRecommendations:open', { count: names.length });
 
 		if (!names.length) {

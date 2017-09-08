@@ -126,6 +126,11 @@ export class MainThreadEditors implements MainThreadEditorsShape {
 
 	$tryShowEditor(id: string, position: EditorPosition): TPromise<void> {
 		// check how often this is used
+		/* __GDPR__
+		   "api.deprecated" : {
+			  "function" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+		   }
+		 */
 		this._telemetryService.publicLog('api.deprecated', { function: 'TextEditor.show' });
 
 		let mainThreadEditor = this._documentsAndEditors.getEditor(id);
@@ -141,6 +146,11 @@ export class MainThreadEditors implements MainThreadEditorsShape {
 
 	$tryHideEditor(id: string): TPromise<void> {
 		// check how often this is used
+		/* __GDPR__
+		   "api.deprecated" : {
+			  "function" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+		   }
+		 */
 		this._telemetryService.publicLog('api.deprecated', { function: 'TextEditor.hide' });
 
 		let mainThreadEditor = this._documentsAndEditors.getEditor(id);

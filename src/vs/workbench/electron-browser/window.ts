@@ -115,6 +115,12 @@ export class ElectronWindow extends Themable {
 		// Support runAction event
 		ipc.on('vscode:runAction', (event, actionId: string) => {
 			this.commandService.executeCommand(actionId, { from: 'menu' }).done(_ => {
+				/* __GDPR__
+				   "commandExecuted" : {
+					  "id" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+					  "from": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+				   }
+				 */
 				this.telemetryService.publicLog('commandExecuted', { id: actionId, from: 'menu' });
 			}, err => {
 				this.messageService.show(Severity.Error, err);

@@ -129,6 +129,11 @@ class ProfilingHint implements IWorkbenchContribution {
 			primaryButton: 'Restart and profile'
 		});
 
+		/* __GDPR__
+		   "profileStartupInvite" : {
+			  "acceptedInvite" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+		   }
+		 */
 		this._telemetryService.publicLog('profileStartupInvite', {
 			acceptedInvite: profile
 		});
