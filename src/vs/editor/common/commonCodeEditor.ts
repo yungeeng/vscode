@@ -993,6 +993,9 @@ export abstract class CommonCodeEditor extends Disposable implements editorCommo
 	protected abstract _removeDecorationType(key: string): void;
 	protected abstract _resolveDecorationOptions(typeKey: string, writable: boolean): editorCommon.IModelDecorationOptions;
 
+	/* __GDPR__FRAGMENT__
+	   "EditorTelemetryData" : {}
+	 */
 	public getTelemetryData(): { [key: string]: any; } {
 		return null;
 	}
