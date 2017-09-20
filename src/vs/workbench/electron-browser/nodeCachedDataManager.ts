@@ -54,8 +54,8 @@ export class NodeCachedDataManager {
 			if (err) {
 				/* __GDPR__
 				   "cachedDataError" : {
-					  "errorCode" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-					  "path": { "endPoint": "none", "classification": "CustomerContent", "purpose": "PerformanceAndHealth" }
+					  "errorCode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+					  "path": { "classification": "CustomerContent", "purpose": "PerformanceAndHealth" }
 				   }
 				 */
 				this._telemetryService.publicLog('cachedDataError', {
@@ -68,9 +68,9 @@ export class NodeCachedDataManager {
 		// log summary
 		/* __GDPR__
 		   "cachedDataInfo" : {
-			  "didRequestCachedData" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-			  "didRejectCachedData": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-			  "didProduceCachedData": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+			  "didRequestCachedData" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+			  "didRejectCachedData": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+			  "didProduceCachedData": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
 		   }
 		 */
 		this._telemetryService.publicLog('cachedDataInfo', {

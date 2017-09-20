@@ -96,8 +96,8 @@ export class ExtensionTipsService implements IExtensionTipsService {
 
 		/* __GDPR__
 		   "extensionRecommendations:unfiltered" : {
-			  "fileBased" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-			  "exeBased": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+			  "fileBased" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "exeBased": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 		   }
 		 */
 		this.telemetryService.publicLog('extensionRecommendations:unfiltered', { fileBased, exeBased });
@@ -235,7 +235,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 								case 0:
 									/* __GDPR__
 									   "extensionRecommendations:popup" : {
-										  "userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+										  "userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 									   }
 									 */
 									this.telemetryService.publicLog('extensionRecommendations:popup', { userReaction: 'show' });
@@ -248,7 +248,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 									);
 									/* __GDPR__
 									   "extensionRecommendations:popup" : {
-										  "userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+										  "userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 									   }
 									 */
 									this.telemetryService.publicLog('extensionRecommendations:popup', { userReaction: 'neverShowAgain' });
@@ -256,7 +256,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 								case 2:
 									/* __GDPR__
 									   "extensionRecommendations:popup" : {
-										  "userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+										  "userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 									   }
 									 */
 									this.telemetryService.publicLog('extensionRecommendations:popup', { userReaction: 'close' });
@@ -264,7 +264,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 						}, () => {
 							/* __GDPR__
 								"extensionRecommendations:popup" : {
-									"userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+									"userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 								}
 							 */
 							this.telemetryService.publicLog('extensionRecommendations:popup', { userReaction: 'cancelled' });
@@ -313,7 +313,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 						case 0:
 						/* __GDPR__
 							"extensionRecommendations:popup" : {
-								"userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+								"userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 							}
 						 */
 						this.telemetryService.publicLog('extensionWorkspaceRecommendations:popup', { userReaction: 'show' });
@@ -321,7 +321,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 						case 1:
 							/* __GDPR__
 								"extensionRecommendations:popup" : {
-									"userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+									"userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 								}
 							 */
 							this.telemetryService.publicLog('extensionWorkspaceRecommendations:popup', { userReaction: 'neverShowAgain' });
@@ -329,7 +329,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 						case 2:
 							/* __GDPR__
 								"extensionRecommendations:popup" : {
-									"userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+									"userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 								}
 							 */
 							this.telemetryService.publicLog('extensionWorkspaceRecommendations:popup', { userReaction: 'close' });
@@ -337,7 +337,7 @@ export class ExtensionTipsService implements IExtensionTipsService {
 				}, () => {
 					/* __GDPR__
 						"extensionRecommendations:popup" : {
-							"userReaction" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+							"userReaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 						}
 					 */
 					this.telemetryService.publicLog('extensionWorkspaceRecommendations:popup', { userReaction: 'cancelled' });

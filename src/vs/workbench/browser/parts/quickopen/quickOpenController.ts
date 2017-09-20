@@ -538,7 +538,7 @@ export class QuickOpenController extends Component implements IQuickOpenService 
 
 		/* __GDPR__
 		   "quickOpenWidgetShown" : {
-			  "mode" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "mode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
 			  "quickNavigate": { "${inline}": [ "${IQuickNavigateConfiguration}" ] }
 		   }
 		 */

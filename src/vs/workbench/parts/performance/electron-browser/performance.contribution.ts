@@ -131,7 +131,7 @@ class ProfilingHint implements IWorkbenchContribution {
 
 		/* __GDPR__
 		   "profileStartupInvite" : {
-			  "acceptedInvite" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+			  "acceptedInvite" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 		   }
 		 */
 		this._telemetryService.publicLog('profileStartupInvite', {

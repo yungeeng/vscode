@@ -173,8 +173,8 @@ export function triggerAndDisposeAction(instantitationService: IInstantiationSer
 	if (telemetryService) {
 		/* __GDPR__
 		   "workbenchActionExecuted" : {
-			  "id" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-			  "from": { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+			  "id" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "from": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 		   }
 		 */
 		telemetryService.publicLog('workbenchActionExecuted', { id: actionInstance.id, from });

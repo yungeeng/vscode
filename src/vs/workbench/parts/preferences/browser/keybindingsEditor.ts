@@ -519,8 +519,8 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditor 
 			this.latestEmptyFilters = [];
 			/* __GDPR__
 			   "keybindings.filter" : {
-				  "filter": { "endPoint": "none", "classification": "CustomerContent", "purpose": "FeatureInsight" },
-				  "emptyFilters" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+				  "filter": { "classification": "CustomerContent", "purpose": "FeatureInsight" },
+				  "emptyFilters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 			   }
 			 */
 			this.telemetryService.publicLog('keybindings.filter', data);

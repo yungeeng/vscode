@@ -813,7 +813,7 @@ export class ExtensionsWorkbenchService implements IExtensionsWorkbenchService {
 
 		/* __GDPR__
 		   "extensionGallery:install" : {
-			  "duration" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
 			  "${include}": [
 				 "${GalleryExtensionTelemetryData}"
 			  ]
@@ -821,7 +821,7 @@ export class ExtensionsWorkbenchService implements IExtensionsWorkbenchService {
 		 */
 		/* __GDPR__
 		   "extensionGallery:update" : {
-			  "duration" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
 			  "${include}": [
 				 "${GalleryExtensionTelemetryData}"
 			  ]
@@ -829,7 +829,7 @@ export class ExtensionsWorkbenchService implements IExtensionsWorkbenchService {
 		 */
 		/* __GDPR__
 		   "extensionGallery:uninstall" : {
-			  "duration" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+			  "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
 			  "${include}": [
 				 "${GalleryExtensionTelemetryData}"
 			  ]

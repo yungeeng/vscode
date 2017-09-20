@@ -316,7 +316,7 @@ export class ExtensionsListView extends CollapsibleView {
 
 				/* __GDPR__
 				   "extensionRecommendations:open" : {
-					  "count" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+					  "count" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 				   }
 				 */
 				this.telemetryService.publicLog('extensionRecommendations:open', { count: names.length });
@@ -337,7 +337,7 @@ export class ExtensionsListView extends CollapsibleView {
 				const names = recommendations.filter(name => name.toLowerCase().indexOf(value) > -1);
 				/* __GDPR__
 				   "extensionWorkspaceRecommendations:open" : {
-					  "count" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+					  "count" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 				   }
 				 */
 				this.telemetryService.publicLog('extensionWorkspaceRecommendations:open', { count: names.length });
@@ -357,7 +357,7 @@ export class ExtensionsListView extends CollapsibleView {
 			.filter(name => name.toLowerCase().indexOf(value) > -1);
 		/* __GDPR__
 		   "extensionKeymapRecommendations:open" : {
-			  "count" : { "endPoint": "none", "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+			  "count" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 		   }
 		 */
 		this.telemetryService.publicLog('extensionKeymapRecommendations:open', { count: names.length });
