@@ -832,7 +832,7 @@ export default class TypeScriptServiceClient implements ITypescriptServiceClient
 			  "typingsInstallerVersion": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
 		   }
 		 */
-		// GDPR__COMMENT: Other events are defined by TypeScript.
+		// __GDPR__COMMENT__: Other events are defined by TypeScript.
 		this.logTelemetry(telemetryData.telemetryEventName, properties);
 	}
 }
